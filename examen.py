@@ -3,14 +3,13 @@ import aiohttp
 import time
 from abc import ABC, abstractmethod
 
-# --- CONFIGURACIÓN DEL EXAMEN ---
-# Si el profesor te dio un token diferente, cámbialo aquí abajo.
+
 URL_API = "http://ecomarket.local/api/v1"
 TOKEN_SEGURIDAD = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9" 
 ESPERA_INICIAL = 5
 ESPERA_MAXIMA = 60
 
-# --- REQUERIMIENTO 1: PATRÓN OBSERVER (15%) ---
+# REQUERIMIENTO 1: PATRÓN OBSERVER (15%) 
 class ObservadorBase(ABC):
     @abstractmethod
     async def actualizar(self, datos_inventario):
@@ -27,7 +26,7 @@ class ModuloStock(ObservadorBase):
                 cantidad = item.get("stock")
                 print(f"  --> ALERTA: {nombre} tiene solo {cantidad} unidades.")
 
-# Módulo para enviar alertas vía POST (Requerimiento 2: 25% de peticiones HTTP)
+# Módulo para enviar alertas. Requerimiento 2: 25% de peticiones HTTP
 class ModuloNotificaciones(ObservadorBase):
     async def actualizar(self, datos_inventario):
         print("[INFO] ModuloNotificaciones: Preparando envío de alertas...")
@@ -53,7 +52,7 @@ class ModuloNotificaciones(ObservadorBase):
                     except Exception as err:
                         print(f"  --> No se pudo enviar alerta: {err}")
 
-# --- REQUERIMIENTO 2 Y 3: MONITOR (50% Manejo API + 15% Polling) ---
+# REQUERIMIENTO 2 Y 3, MONITOR (50% Manejo API + 15% Polling) 
 class MonitorEcoMarket:
     def __init__(self):
         self.observadores = []
@@ -66,7 +65,7 @@ class MonitorEcoMarket:
         self.observadores.append(modulo)
 
     async def obtener_inventario(self, session):
-        # Headers con Token y ETag (Invariante 1)
+        # Headers con Token y ETag 
         headers = {
             "Authorization": f"Bearer {TOKEN_SEGURIDAD}",
             "Accept": "application/json"
@@ -75,7 +74,7 @@ class MonitorEcoMarket:
             headers["If-None-Match"] = self.etag_actual
 
         try:
-            # Timeout de 10 segundos (Invariante 1)
+            # Timeout de 10 segundos 
             async with session.get(f"{URL_API}/inventario", headers=headers, timeout=10) as resp:
                 
                 # Caso 200: Datos nuevos
@@ -121,14 +120,14 @@ class MonitorEcoMarket:
                         await obs.actualizar(data)
                 
                 print(f"Próxima revisión en {self.tiempo_poll} segundos...")
-                # Invariante 3: No usar time.sleep(), usar asyncio.sleep()
+                # Invariante 3 No usar time.sleep(), usar asyncio.sleep()
                 await asyncio.sleep(self.tiempo_poll)
 
     def cerrar(self):
-        # Invariante 4: Cierre suave sin excepciones
+        # Invariante 4: Cierre 
         self.activo = False
 
-# --- PUNTO DE ENTRADA ---
+#  PUNTO DE ENTRADA 
 async def principal():
     monitor = MonitorEcoMarket()
     
